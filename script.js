@@ -1,29 +1,55 @@
-const slider = document.querySelector('.items');
-let isDown = false;
-let startX;
-let scrollLeft;
 
-slider.addEventListener('mousedown', (e) => {
-  isDown = true;
-  slider.classList.add('active');
-  startX = e.pageX - slider.offsetLeft;
-  scrollLeft = slider.scrollLeft;
-});
+(() => {
+  const slider = document.querySelector('.items');
 
-slider.addEventListener('mouseleave', () => {
-  isDown = false;
-  slider.classList.remove('active');
-});
+  // If you previously set absolute positions on .item, undo it
+  document.querySelectorAll('.item').forEach(i => (i.style.position = ''));
 
-slider.addEventListener('mouseup', () => {
-  isDown = false;
-  slider.classList.remove('active');
-});
+  let isDown = false;
+  let startX = 0;
+  let startScroll = 0;
 
-slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return;
-  e.preventDefault();
-  const x = e.pageX - slider.offsetLeft;
-  const walk = (x - startX) * 2; // *2 makes it scroll faster
-  slider.scrollLeft = scrollLeft - walk;
-});
+  // robust X extractor (works with mouse & touch)
+  const getX = (e) =>
+    e.touches?.[0]?.pageX ?? e.pageX ?? (e.clientX + window.scrollX);
+
+  // prevent native drag ghost image / selection
+  slider.addEventListener('dragstart', (e) => e.preventDefault());
+
+  // MOUSE
+  slider.addEventListener('mousedown', (e) => {
+    isDown = true;
+    slider.classList.add('active');
+    startX = getX(e);
+    startScroll = slider.scrollLeft;
+    e.preventDefault(); // important for Cypress consistency
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    const delta = getX(e) - startX;      // right drag -> positive
+    slider.scrollLeft = startScroll - delta; // scroll opposite to drag
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDown) return;
+    isDown = false;
+    slider.classList.remove('active');
+  });
+
+  // TOUCH (optional)
+  slider.addEventListener('touchstart', (e) => {
+    isDown = true;
+    startX = getX(e);
+    startScroll = slider.scrollLeft;
+  }, { passive: true });
+
+  slider.addEventListener('touchmove', (e) => {
+    if (!isDown) return;
+    const delta = getX(e) - startX;
+    slider.scrollLeft = startScroll - delta;
+  }, { passive: true });
+
+  slider.addEventListener('touchend', () => { isDown = false; });
+})();
+
