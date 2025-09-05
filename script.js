@@ -5,7 +5,7 @@ let offsetX, offsetY;
 let isDragging = false;
 let currentItem = null;
 
-// Measure initial positions and switch to absolute positioning
+
 items.forEach(item => {
   let rect = item.getBoundingClientRect();
   let parentRect = container.getBoundingClientRect();
@@ -14,6 +14,7 @@ items.forEach(item => {
   item.style.left = (rect.left - parentRect.left) + "px";
   item.style.top = (rect.top - parentRect.top) + "px";
 
+  // Mouse down → start dragging
   item.addEventListener("mousedown", e => {
     isDragging = true;
     currentItem = item;
@@ -23,6 +24,7 @@ items.forEach(item => {
   });
 });
 
+
 document.addEventListener("mousemove", e => {
   if (!isDragging || !currentItem) return;
 
@@ -31,13 +33,14 @@ document.addEventListener("mousemove", e => {
   let newLeft = e.clientX - containerRect.left - offsetX;
   let newTop = e.clientY - containerRect.top - offsetY;
 
-  // Boundaries
+ 
   newLeft = Math.max(0, Math.min(newLeft, container.clientWidth - currentItem.offsetWidth));
   newTop = Math.max(0, Math.min(newTop, container.clientHeight - currentItem.offsetHeight));
 
   currentItem.style.left = newLeft + "px";
   currentItem.style.top = newTop + "px";
 });
+
 
 document.addEventListener("mouseup", () => {
   isDragging = false;
