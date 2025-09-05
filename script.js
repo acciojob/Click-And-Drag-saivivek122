@@ -1,48 +1,51 @@
-let items = document.querySelectorAll(".item");
-let container = document.querySelector(".items");
+const container = document.querySelector('.items')
+const cubes = document.querySelectorAll('.item')
 
-let offsetX, offsetY;
-let isDragging = false;
-let currentItem = null;
+let selectedCube = null
+let offsetX = 0
+let offsetY = 0
 
+cubes.forEach(cube => {
+  cube.style.position = 'absolute' // allow free movement
+  cube.addEventListener('mousedown', e => {
+    selectedCube = cube
+    const rect = cube.getBoundingClientRect()
+    offsetX = e.clientX - rect.left
+    offsetY = e.clientY - rect.top
+    cube.style.zIndex = 1000 // bring to front while dragging
+    document.addEventListener('mousemove', moveCube)
+    document.addEventListener('mouseup', dropCube)
+  })
+})
 
-items.forEach(item => {
-  let rect = item.getBoundingClientRect();
-  let parentRect = container.getBoundingClientRect();
+function moveCube(e) {
+  if (!selectedCube) return
 
-  item.style.position = "absolute";
-  item.style.left = (rect.left - parentRect.left) + "px";
-  item.style.top = (rect.top - parentRect.top) + "px";
+  const containerRect = container.getBoundingClientRect()
+  const cubeRect = selectedCube.getBoundingClientRect()
 
-  // Mouse down → start dragging
-  item.addEventListener("mousedown", e => {
-    isDragging = true;
-    currentItem = item;
-    offsetX = e.clientX - currentItem.offsetLeft;
-    offsetY = e.clientY - currentItem.offsetTop;
-    e.preventDefault();
-  });
-});
-
-
-document.addEventListener("mousemove", e => {
-  if (!isDragging || !currentItem) return;
-
-  let containerRect = container.getBoundingClientRect();
-
-  let newLeft = e.clientX - containerRect.left - offsetX;
-  let newTop = e.clientY - containerRect.top - offsetY;
-
- 
-  newLeft = Math.max(0, Math.min(newLeft, container.clientWidth - currentItem.offsetWidth));
-  newTop = Math.max(0, Math.min(newTop, container.clientHeight - currentItem.offsetHeight));
-
-  currentItem.style.left = newLeft + "px";
-  currentItem.style.top = newTop + "px";
-});
+  let x = e.clientX - containerRect.left - offsetX
+  let y = e.clientY - containerRect.top - offsetY
 
 
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  currentItem = null;
-});
+  if (x < 0) x = 0
+  if (y < 0) y = 0
+  if (x + cubeRect.width > containerRect.width) {
+    x = containerRect.width - cubeRect.width
+  }
+  if (y + cubeRect.height > containerRect.height) {
+    y = containerRect.height - cubeRect.height
+  }
+
+  selectedCube.style.left = x + 'px'
+  selectedCube.style.top = y + 'px'
+}
+
+function dropCube() {
+  if (selectedCube) {
+    selectedCube.style.zIndex = 1
+    selectedCube = null
+  }
+  document.removeEventListener('mousemove', moveCube)
+  document.removeEventListener('mouseup', dropCube)
+}
